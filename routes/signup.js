@@ -15,6 +15,22 @@ var pool = mysql.createPool({
     database: 'job_listing'
 });
 
+router.use((req, res, next) => {
+    let token = req.body.token || req.query.token || req.headers['x-access-token'];
+
+    if(token){
+        jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+            if(err){
+                next();
+            } else {
+                res.json({'status': false, 'message': 'User already authenticated'});
+            }
+        })
+    }
+    else
+        next();
+});
+
 function signup_user(req,res){
     if(req.body === null)
     {
@@ -55,7 +71,7 @@ function signup_user(req,res){
                            "0, ' ', ' '"+
                        ")", function (err,rows) {
                        if(err){
-                           res.json({"code": 100, "message": "Connection could not be established. Server too busy"});
+                           res.json({"code": 100, "message": "Oops! Some Error Occured"});
                            return;
                        }
                        conn.release();

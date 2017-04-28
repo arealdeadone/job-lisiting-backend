@@ -12,8 +12,9 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-var signup = require('./routes/signup');
-var login = require('./routes/login');
+const signup = require('./routes/signup');
+const login = require('./routes/login');
+const route = require('./routes');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -21,10 +22,31 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'job-listing-frontend/dist')));
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-access-token");
+    res.header("Access-Control-Request-Method","POST GET PUT PATCH DELETE");
+    next();
+});
 
-app.use('/api/signup', signup);
-app.use('/api/login', login);
+app.use('/api', route);
+app.use('/auth/login', login);
+app.use('/auth/signup', signup);
+
+//Serving Front End
+app.get('*', (req, res) => {
+    params = req.params;
+    splitparams = params[0].split('/');
+    try {
+        if(splitparams['1'] === 'assets')
+            res.sendFile(path.join(__dirname, 'public'+params['0']));
+        else
+            res.sendFile(path.join(__dirname, 'public/index.html'));
+    }catch (e){
+        console.log(e);
+    }
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
